@@ -4,17 +4,19 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { 
-  ShieldCheck, ArrowRight, Mail, Lock, 
+import {
+  ShieldCheck, ArrowRight, Mail, Lock,
   AlertCircle, Loader2, ArrowLeft, User,
   Briefcase, Users, CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 
 type UserRole = 'USER' | 'PARENT';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { refreshProfile } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -45,8 +47,6 @@ export default function RegisterPage() {
 
       if (authData.user) {
         // 2. Create profile entry
-        // NOTE: In a production app, you might use a Supabase Trigger to create the profile.
-        // For this implementation, we'll do it manually.
         let isMinor = false;
         if (role === 'USER' && dateOfBirth) {
           const ageDiffMs = Date.now() - new Date(dateOfBirth).getTime();
@@ -83,14 +83,21 @@ export default function RegisterPage() {
           };
           const { error: fallbackError } = await supabase.from('profiles').insert(fallbackData);
           if (fallbackError) {
-             console.error('Fallback failed too:', fallbackError);
-             setError('Аккаунт создан, но возникла ошибка при настройке профиля. Войдите еще раз.');
-             return;
+            console.error('Fallback failed too:', fallbackError);
+            setError('Аккаунт создан, но возникла ошибка при настройке профиля. Войдите еще раз.');
+            return;
           }
         }
 
         // Force a session refresh/login just to ensure the client acknowledges it
-        await supabase.auth.signInWithPassword({ email, password });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+
+        // CRITICAL: Refresh the auth context profile
+        await refreshProfile();
+
+        // Give it a tiny moment to settle
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         if (role === 'USER') {
           router.push('/verify');
@@ -108,18 +115,18 @@ export default function RegisterPage() {
   };
 
   const roleConfigs = [
-    { 
-      id: 'USER' as UserRole, 
-      label: 'Пользователь', 
-      desc: 'Хочу работать или стать заказчиком', 
+    {
+      id: 'USER' as UserRole,
+      label: 'Пользователь',
+      desc: 'Хочу работать или стать заказчиком',
       icon: User,
       color: 'bg-primary/10 text-primary',
       activeColor: 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
     },
-    { 
-      id: 'PARENT' as UserRole, 
-      label: 'Родитель', 
-      desc: 'Контролирую безопасность ребенка', 
+    {
+      id: 'PARENT' as UserRole,
+      label: 'Родитель',
+      desc: 'Контролирую безопасность ребенка',
       icon: Users,
       color: 'bg-secondary/10 text-secondary',
       activeColor: 'bg-secondary text-white border-secondary shadow-lg shadow-secondary/20'
@@ -157,15 +164,13 @@ export default function RegisterPage() {
                   key={cfg.id}
                   type="button"
                   onClick={() => setRole(cfg.id)}
-                  className={`relative p-5 rounded-[32px] border transition-all text-left flex flex-col gap-3 group overflow-hidden ${
-                    role === cfg.id 
+                  className={`relative p-5 rounded-[32px] border transition-all text-left flex flex-col gap-3 group overflow-hidden ${role === cfg.id
                     ? cfg.activeColor
                     : 'bg-white border-border/60 hover:border-primary/40'
-                  }`}
+                    }`}
                 >
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                    role === cfg.id ? 'bg-white/20' : cfg.color
-                  }`}>
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${role === cfg.id ? 'bg-white/20' : cfg.color
+                    }`}>
                     <cfg.icon size={20} />
                   </div>
                   <div>
@@ -288,7 +293,7 @@ export default function RegisterPage() {
               )}
             </button>
             <p className="text-[10px] text-center text-muted-foreground font-medium px-8 leading-relaxed">
-              Нажимая кнопку, вы соглашаетесь с правилами платформы и политикой конфиденциальности. 
+              Нажимая кнопку, вы соглашаетесь с правилами платформы и политикой конфиденциальности.
               Для подростков до 18 лет требуется верификация родителя после регистрации.
             </p>
           </div>
