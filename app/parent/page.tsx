@@ -15,6 +15,7 @@ export default function ParentDashboard() {
   const { user } = useAuth();
   const [children, setChildren] = useState<any[]>([]);
   const [activeTransactions, setActiveTransactions] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isBlockLoading, setIsBlockLoading] = useState(false);
   const [blockSuccess, setBlockSuccess] = useState(false);
@@ -46,8 +47,16 @@ export default function ParentDashboard() {
             .select('*, services(*), profiles:buyer_id(*)')
             .in('seller_id', childIds)
             .eq('status', 'ACTIVE');
-          
           setActiveTransactions(txData || []);
+
+          // 3. Fetch parent alerts
+          const { data: alertsData } = await supabase
+            .from('parent_alerts')
+            .select('*, child:child_id(name), transaction:transaction_id(services(title))')
+            .eq('parent_id', user.id)
+            .order('created_at', { ascending: false });
+
+          setAlerts(alertsData || []);
         }
       } catch (err) {
         console.error('Error fetching parent hub data:', err);
@@ -223,12 +232,44 @@ export default function ParentDashboard() {
           </section>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Recent Activity Monitoring */}
+            {/* Alerts & Monitoring */}
             <div className="lg:col-span-2 space-y-8">
-              <div className="flex items-center justify-between">
+              
+              {/* Parent Alerts */}
+              {alerts.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-black flex items-center gap-3">
+                    <AlertTriangle size={24} className="text-destructive" />
+                    Важные уведомления
+                  </h2>
+                  <div className="space-y-3">
+                    {alerts.map(alert => (
+                      <div key={alert.id} className="p-5 bg-destructive/5 border border-destructive/20 rounded-3xl flex items-start gap-4">
+                        <div className="p-3 bg-white rounded-2xl shrink-0">
+                          <AlertTriangle size={20} className="text-destructive" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-destructive bg-destructive/10 px-2 py-0.5 rounded-lg">
+                              {alert.type}
+                            </span>
+                            <span className="text-xs font-bold text-muted-foreground">Ребёнок: {alert.child?.name}</span>
+                          </div>
+                          <p className="text-sm font-bold text-foreground">{alert.message}</p>
+                          <Link href={`/transaction/${alert.transaction_id}`} className="text-xs font-bold text-primary hover:underline mt-1 inline-block">
+                            Перейти к сделке →
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-4">
                 <h2 className="text-2xl font-black flex items-center gap-3">
                   <History size={24} className="text-primary" />
-                  Активность ребенка
+                  Активные сделки
                 </h2>
               </div>
 

@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('USER');
   const [parentEmail, setParentEmail] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,6 +47,14 @@ export default function RegisterPage() {
         // 2. Create profile entry
         // NOTE: In a production app, you might use a Supabase Trigger to create the profile.
         // For this implementation, we'll do it manually.
+        let isMinor = false;
+        if (role === 'USER' && dateOfBirth) {
+          const ageDiffMs = Date.now() - new Date(dateOfBirth).getTime();
+          const ageDate = new Date(ageDiffMs);
+          const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+          isMinor = age < 18;
+        }
+
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -53,6 +62,8 @@ export default function RegisterPage() {
             name,
             role,
             parent_email: role === 'USER' ? parentEmail : null,
+            date_of_birth: role === 'USER' ? dateOfBirth || null : null,
+            is_minor: role === 'USER' ? isMinor : false,
             trust_score: 100,
             balance: 0,
             completed_jobs: 0,
@@ -201,17 +212,36 @@ export default function RegisterPage() {
             </div>
 
             {role === 'USER' && (
-              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-6">Email родителя (Опекуна)</label>
-                <div className="relative group">
-                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
-                  <input
-                    type="email"
-                    value={parentEmail}
-                    onChange={(e) => setParentEmail(e.target.value)}
-                    className="w-full pl-16 pr-6 py-5 rounded-[32px] border border-border/60 bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-medium"
-                    placeholder="parent@example.com (опционально)"
-                  />
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-6">Дата рождения *</label>
+                  <div className="relative group">
+                    <input
+                      type="date"
+                      required
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      className="w-full px-6 py-5 rounded-[32px] border border-border/60 bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-medium text-muted-foreground focus:text-foreground"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-6 flex items-center gap-2">
+                    Email родителя (Опекуна)
+                    <span className="text-secondary bg-secondary/10 px-2 rounded-full text-[8px] uppercase">Важно если вам нет 18</span>
+                  </label>
+                  <div className="relative group">
+                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
+                    <input
+                      type="email"
+                      required={!!dateOfBirth && (Math.abs(new Date(Date.now() - new Date(dateOfBirth).getTime()).getUTCFullYear() - 1970) < 18)}
+                      value={parentEmail}
+                      onChange={(e) => setParentEmail(e.target.value)}
+                      className="w-full pl-16 pr-6 py-5 rounded-[32px] border border-border/60 bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all font-medium"
+                      placeholder="parent@example.com"
+                    />
+                  </div>
                 </div>
               </div>
             )}

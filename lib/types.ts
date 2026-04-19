@@ -10,7 +10,12 @@ export interface User {
   balance: number;
   trust_score: number;
   completed_jobs: number;
-
+  age?: number;
+  is_minor?: boolean;
+  is_verified?: boolean;
+  verification_status?: 'NONE' | 'PENDING' | 'VERIFIED' | 'REJECTED';
+  verification_confidence?: number;
+  parent_id?: string;
 }
 
 export interface Service {

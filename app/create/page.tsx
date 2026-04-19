@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, X, ShieldCheck, HelpCircle, ArrowRight, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
+import WithVerification from '@/components/WithVerification';
 
 export default function CreateServicePage() {
   const router = useRouter();
@@ -72,7 +73,8 @@ export default function CreateServicePage() {
 
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 pb-20 animate-in fade-in duration-700">
+    <WithVerification>
+      <div className="max-w-3xl mx-auto space-y-8 pb-20 animate-in fade-in duration-700">
       <div className="space-y-2">
         <h1 className="text-3xl font-black">Создать услугу</h1>
         <p className="text-muted-foreground font-medium">Опишите, что вы умеете делать и установите честную цену.</p>
@@ -112,6 +114,9 @@ export default function CreateServicePage() {
                   <option>Тексты</option>
                   <option>Видео</option>
                   <option>Маркетинг</option>
+                  {(user?.age && user.age >= 16) && (
+                    <option value="Офлайн">Офлайн услуги (Выезд)</option>
+                  )}
                 </select>
               </div>
               <div className="space-y-2">
@@ -236,5 +241,6 @@ export default function CreateServicePage() {
         </div>
       </form>
     </div>
+    </WithVerification>
   );
 }

@@ -8,6 +8,7 @@ import {
   ShieldCheck, ArrowLeft, Loader2, CheckCircle2, Lock, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import WithVerification from '@/components/WithVerification';
 
 // Inner component that uses useSearchParams — must be wrapped in Suspense
 function NewTransactionContent() {
@@ -20,6 +21,7 @@ function NewTransactionContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOrdering, setIsOrdering] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [requirements, setRequirements] = useState('');
 
   useEffect(() => {
     if (!serviceId) {
@@ -52,15 +54,25 @@ function NewTransactionContent() {
     setIsOrdering(true);
     setError(null);
     try {
+      // Build milestones_progress from service milestones
+      const milestonesProgress = Array.isArray(service.milestones)
+        ? service.milestones.map((m: any, i: number) => ({ ...m, id: i, status: 'pending' }))
+        : [];
+
+      const insertData: any = {
+        service_id: service.id,
+        buyer_id: user.id,
+        seller_id: service.owner_id,
+        amount: service.price,
+        status: 'ACTIVE',
+      };
+
+      if (requirements.trim()) insertData.requirements = requirements.trim();
+      if (milestonesProgress.length > 0) insertData.milestones_progress = milestonesProgress;
+
       const { data: tx, error: txError } = await supabase
         .from('transactions')
-        .insert({
-          service_id: service.id,
-          buyer_id: user.id,
-          seller_id: service.owner_id,
-          amount: service.price,
-          status: 'ACTIVE',
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -147,6 +159,24 @@ function NewTransactionContent() {
         </div>
       )}
 
+      {/* Requirements Input */}
+      <div className="bg-white rounded-[40px] p-8 border border-border space-y-4 card-shadow">
+        <h3 className="text-lg font-black flex items-center gap-2">
+          <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
+          Требования к работе (ТЗ)
+        </h3>
+        <p className="text-sm text-muted-foreground font-medium">
+          Опишите, что именно нужно сделать. Это будет прикреплено к сделке и исполнитель не сможет получить оплату, пока не выполнит эти требования.
+        </p>
+        <textarea
+          value={requirements}
+          onChange={(e) => setRequirements(e.target.value)}
+          placeholder="Например: Сделать логотип в минималистичном стиле, 3 варианта, цвета синий и белый..."
+          rows={5}
+          className="w-full p-4 rounded-2xl border border-border bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-sm font-medium resize-none transition-all"
+        />
+      </div>
+
       {/* Escrow total */}
       <div className="bg-primary rounded-[40px] p-8 text-white space-y-4">
         <div className="flex items-center gap-3">
@@ -176,7 +206,7 @@ function NewTransactionContent() {
       ) : (
         <button
           onClick={handleConfirmOrder}
-          disabled={isOrdering}
+          disabled={isOrdering || !requirements.trim()}
           className="w-full btn-primary py-6 text-xl shadow-2xl shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-4 group"
         >
           {isOrdering ? (
@@ -184,7 +214,7 @@ function NewTransactionContent() {
           ) : (
             <>
               <ShieldCheck size={24} />
-              Открыть сделку и войти в чат
+              {requirements.trim() ? 'Открыть сделку и войти в чат' : 'Заполните ТЗ для продолжения'}
             </>
           )}
         </button>
@@ -207,7 +237,9 @@ export default function NewTransactionPage() {
         <p className="text-xl font-black text-muted-foreground animate-pulse tracking-wide uppercase">Загрузка...</p>
       </div>
     }>
-      <NewTransactionContent />
+      <WithVerification>
+        <NewTransactionContent />
+      </WithVerification>
     </Suspense>
   );
 }

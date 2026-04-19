@@ -39,7 +39,7 @@ export default function BrowsePage() {
       try {
         const { data, error } = await supabase
           .from('services')
-          .select('id, owner_id, title, description, price, category, image, rating, created_at, profiles(name, avatar)');
+          .select('id, owner_id, title, description, price, category, image, rating, created_at, profiles(name, avatar, is_verified)');
 
         if (error) {
           console.error('Error fetching services:', error.message);
@@ -296,8 +296,9 @@ export default function BrowsePage() {
                           <UserCircle size={14} className="text-muted-foreground" />
                         )}
                       </div>
-                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                         {service.profiles?.name || 'Пользователь'}
+                        {service.profiles?.is_verified && <CheckCircle2 size={12} className="text-indigo-500" />}
                       </span>
                     </div>
                     <h3 className="text-xl font-black leading-tight">{service.title}</h3>

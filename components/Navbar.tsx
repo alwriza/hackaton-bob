@@ -114,6 +114,28 @@ export default function Navbar() {
         }
       });
 
+      // If user is a PARENT, fetch parent_alerts
+      if (user.role === 'PARENT') {
+        const { data: parentAlerts } = await supabase
+          .from('parent_alerts')
+          .select('*, child:child_id(name)')
+          .eq('parent_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        (parentAlerts || []).forEach((alert: any) => {
+          items.push({
+            id: `alert-${alert.id}`,
+            type: 'alert',
+            title: `Тревога: ${alert.type}`,
+            body: alert.message + ` (Ребёнок: ${alert.child?.name})`,
+            href: alert.transaction_id ? `/transaction/${alert.transaction_id}` : '/parent',
+            time: alert.created_at,
+            read: false,
+          });
+        });
+      }
+
       // Sort by time
       items.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
       setNotifications(items.slice(0, 6));
