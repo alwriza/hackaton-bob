@@ -2,12 +2,12 @@
 
 :root {
   --background: #fdfdfd;
-  --foreground: #0f172a; /* Slate 900 - Trustworthy Navy */
-  --primary: #0f172a;    /* Navy */
+  --foreground: #0f172a;
+  --primary: #0f172a;
   --primary-foreground: #ffffff;
-  --secondary: #0d9488;  /* Teal - Professional */
+  --secondary: #0d9488;
   --secondary-foreground: #ffffff;
-  --accent: #f97316;     /* Vibrant Orange - Energetic Pop */
+  --accent: #f97316;
   --accent-foreground: #ffffff;
   
   --card: #ffffff;
@@ -46,14 +46,13 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   
-  /* Modern Shadows */
   --shadow-premium: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
   --shadow-soft: 0 4px 12px 0 rgba(0, 0, 0, 0.03);
 }
 
 body {
   background-color: var(--background);
-  color: #334155; /* Slate 700 for better readability */
+  color: #334155;
   font-family: var(--font-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
@@ -65,29 +64,122 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.025em;
 }
 
-/* Custom Utilities */
+/* ── Custom Utilities ── */
 .card-shadow {
   box-shadow: var(--shadow-soft);
 }
 
 .premium-card {
-  @apply bg-white border border-border/60 transition-all duration-300;
+  @apply bg-white border border-border/60 transition-all duration-500;
   box-shadow: var(--shadow-soft);
 }
 
 .premium-card:hover {
   box-shadow: var(--shadow-premium);
-  @apply border-primary/10 -translate-y-1;
+  @apply border-primary/10 -translate-y-1.5;
 }
 
 .btn-primary {
-  @apply px-6 py-3 rounded-2xl font-bold transition-all active:scale-95 bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg shadow-accent/20;
+  @apply px-6 py-3 rounded-2xl font-bold transition-all duration-200 active:scale-95 bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg shadow-accent/20;
 }
 
 .btn-secondary {
-  @apply px-6 py-3 rounded-2xl font-bold transition-all active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90;
+  @apply px-6 py-3 rounded-2xl font-bold transition-all duration-200 active:scale-95 bg-primary text-primary-foreground hover:bg-primary/90;
 }
 
 .btn-ghost {
-  @apply px-6 py-3 rounded-2xl font-bold transition-all active:scale-95 bg-accent/10 text-accent hover:bg-accent/20;
+  @apply px-6 py-3 rounded-2xl font-bold transition-all duration-200 active:scale-95 bg-accent/10 text-accent hover:bg-accent/20;
+}
+
+/* ── Custom Keyframes ── */
+
+/* Slow floating for hero decorative elements */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-12px) rotate(1deg); }
+}
+
+/* Subtle pulse glow */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.06); }
+}
+
+/* Shimmer for skeleton loaders */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+/* Gentle spin for decorative orbs */
+@keyframes slow-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Fade up — for staggered content */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Horizontal marquee for trust strip */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Animation Utility Classes ── */
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-slow-spin {
+  animation: slow-spin 20s linear infinite;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out both;
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+/* Stagger delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Shimmer skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Smooth transitions for interactive elements */
+a, button {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scrollbar hide utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
