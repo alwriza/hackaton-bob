@@ -72,26 +72,20 @@ export default function RegisterPage() {
           .insert(profileData);
 
         if (profileError) {
-          // If the profileError is about a missing column (because they didn't run SQL)
-          if (profileError.code === '42703') {
-            console.warn('Fallback profile insert (missing new columns from SQL migration).');
-            const fallbackData = {
-              id: authData.user.id,
-              name,
-              role,
-              trust_score: 100,
-              balance: 0,
-              completed_jobs: 0,
-            };
-            const { error: fallbackError } = await supabase.from('profiles').insert(fallbackData);
-            if (fallbackError) {
-               setError('Ошибка при настройке профиля. Войдите еще раз.');
-               return;
-            }
-          } else {
-            console.error('Profile creation error:', profileError);
-            setError('Аккаунт создан, но возникла ошибка. Пожалуйста, войдите и обновите данные.');
-            return;
+          console.warn('Profile insert failed, attempting fallback...', profileError);
+          const fallbackData = {
+            id: authData.user.id,
+            name,
+            role,
+            trust_score: 100,
+            balance: 0,
+            completed_jobs: 0,
+          };
+          const { error: fallbackError } = await supabase.from('profiles').insert(fallbackData);
+          if (fallbackError) {
+             console.error('Fallback failed too:', fallbackError);
+             setError('Аккаунт создан, но возникла ошибка при настройке профиля. Войдите еще раз.');
+             return;
           }
         }
 

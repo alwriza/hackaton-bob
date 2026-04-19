@@ -128,9 +128,18 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex flex-col gap-2">
+          {!user.is_verified && user.role === 'USER' && (
+            <Link
+              href="/verify"
+              className="px-4 py-2 rounded-xl font-black transition-all active:scale-95 bg-primary text-white hover:bg-primary/90 flex items-center gap-2 text-sm shadow-md"
+            >
+              <ShieldCheck size={18} />
+              Пройти верификацию
+            </Link>
+          )}
           <button
             onClick={logout}
-            className="px-4 py-2 rounded-xl font-medium transition-all active:scale-95 bg-destructive/10 text-destructive hover:bg-destructive/20 flex items-center gap-2 text-sm font-bold"
+            className="px-4 py-2 rounded-xl font-medium transition-all active:scale-95 bg-destructive/10 text-destructive hover:bg-destructive/20 flex items-center justify-center gap-2 text-sm font-bold w-full"
           >
             <LogOut size={18} />
             Выйти
@@ -225,16 +234,29 @@ export default function ProfilePage() {
           { label: 'Каталог', href: '/browse', icon: Heart, color: 'text-warning' },
           { label: 'Создать услугу', href: '/create', icon: Plus, color: 'text-secondary' },
         ].map(item => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="bg-white rounded-[32px] p-6 border border-border hover:shadow-premium transition-all group flex flex-col items-center gap-3 text-center"
-          >
-            <div className={`p-4 bg-accent/5 rounded-2xl group-hover:bg-primary/5 transition-all ${item.color}`}>
-              <item.icon size={28} />
-            </div>
-            <span className="text-sm font-black text-muted-foreground group-hover:text-foreground transition-colors">{item.label}</span>
-          </Link>
+          user?.role === 'USER' && !user?.is_verified && (item.href === '/create') ? (
+            <Link
+              key={item.href}
+              href="/verify"
+              className="bg-white rounded-[32px] p-6 border border-destructive/20 hover:border-destructive hover:shadow-premium transition-all group flex flex-col items-center gap-3 text-center"
+            >
+              <div className={`p-4 bg-destructive/10 rounded-2xl transition-all text-destructive`}>
+                <AlertTriangle size={28} />
+              </div>
+              <span className="text-sm font-black text-destructive transition-colors">Нужна верификация</span>
+            </Link>
+          ) : (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="bg-white rounded-[32px] p-6 border border-border hover:shadow-premium transition-all group flex flex-col items-center gap-3 text-center"
+            >
+              <div className={`p-4 bg-accent/5 rounded-2xl group-hover:bg-primary/5 transition-all ${item.color}`}>
+                <item.icon size={28} />
+              </div>
+              <span className="text-sm font-black text-muted-foreground group-hover:text-foreground transition-colors">{item.label}</span>
+            </Link>
+          )
         ))}
       </div>
 
