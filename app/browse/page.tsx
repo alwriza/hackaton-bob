@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useRef } from 'react';
 import { Search, SlidersHorizontal, Heart, Star, UserCircle, Loader2, X, ArrowUpDown, TrendingUp, Clock, DollarSign, CheckCircle2 } from 'lucide-react';
