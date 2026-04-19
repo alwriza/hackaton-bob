@@ -1,16 +1,16 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import {
-  ShieldCheck, ArrowLeft, Loader2, CreditCard, CheckCircle2, Lock, AlertCircle
+  ShieldCheck, ArrowLeft, Loader2, CheckCircle2, Lock, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function NewTransactionPage() {
+// Inner component that uses useSearchParams — must be wrapped in Suspense
+function NewTransactionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -65,7 +65,6 @@ export default function NewTransactionPage() {
         .single();
 
       if (txError) throw txError;
-
       router.push(`/transaction/${tx.id}`);
     } catch (err: any) {
       setError(err.message || 'Ошибка при создании заказа. Попробуйте ещё раз.');
@@ -196,5 +195,19 @@ export default function NewTransactionPage() {
         Защищено системой эскроу OPENwork
       </div>
     </div>
+  );
+}
+
+// Page exports the Suspense-wrapped component — required by Next.js 15 for useSearchParams
+export default function NewTransactionPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center py-40 space-y-6">
+        <Loader2 size={64} className="animate-spin text-primary" />
+        <p className="text-xl font-black text-muted-foreground animate-pulse tracking-wide uppercase">Загрузка...</p>
+      </div>
+    }>
+      <NewTransactionContent />
+    </Suspense>
   );
 }
