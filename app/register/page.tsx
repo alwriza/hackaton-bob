@@ -55,31 +55,54 @@ export default function RegisterPage() {
           isMinor = age < 18;
         }
 
+        const profileData = {
+          id: authData.user.id,
+          name,
+          role,
+          parent_email: role === 'USER' ? parentEmail || null : null,
+          date_of_birth: role === 'USER' ? dateOfBirth || null : null,
+          is_minor: role === 'USER' ? isMinor : false,
+          trust_score: 100,
+          balance: 0,
+          completed_jobs: 0,
+        };
+
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
-            id: authData.user.id,
-            name,
-            role,
-            parent_email: role === 'USER' ? parentEmail : null,
-            date_of_birth: role === 'USER' ? dateOfBirth || null : null,
-            is_minor: role === 'USER' ? isMinor : false,
-            trust_score: 100,
-            balance: 0,
-            completed_jobs: 0,
-          });
+          .insert(profileData);
 
         if (profileError) {
-          console.error('Profile creation error:', profileError);
-          // If profile fails, we might want to inform the user but they are already registered in Auth
-          setError('Аккаунт создан, но возникла ошибка при настройке профиля. Пожалуйста, войдите и обновите данные.');
-          return;
+          // If the profileError is about a missing column (because they didn't run SQL)
+          if (profileError.code === '42703') {
+            console.warn('Fallback profile insert (missing new columns from SQL migration).');
+            const fallbackData = {
+              id: authData.user.id,
+              name,
+              role,
+              trust_score: 100,
+              balance: 0,
+              completed_jobs: 0,
+            };
+            const { error: fallbackError } = await supabase.from('profiles').insert(fallbackData);
+            if (fallbackError) {
+               setError('Ошибка при настройке профиля. Войдите еще раз.');
+               return;
+            }
+          } else {
+            console.error('Profile creation error:', profileError);
+            setError('Аккаунт создан, но возникла ошибка. Пожалуйста, войдите и обновите данные.');
+            return;
+          }
         }
 
         // Force a session refresh/login just to ensure the client acknowledges it
         await supabase.auth.signInWithPassword({ email, password });
 
-        router.push('/');
+        if (role === 'USER') {
+          router.push('/verify');
+        } else {
+          router.push('/');
+        }
         router.refresh();
       }
 
@@ -247,7 +270,15 @@ export default function RegisterPage() {
             )}
           </div>
 
-          <div className="space-y-6 pt-4">
+          <div className="bg-secondary/5 border border-secondary/20 rounded-2xl p-5 text-xs font-medium text-secondary-foreground leading-relaxed flex items-start gap-3">
+            <ShieldCheck size={24} className="text-secondary shrink-0" />
+            <div>
+              <span className="font-black text-secondary tracking-widest uppercase text-[10px] block mb-1">Для родителей</span>
+              Родители могут зарегистрироваться с ролью «Родитель», чтобы следить за балансом и активностью своих детей, а также блокировать сомнительные сделки.
+            </div>
+          </div>
+
+          <div className="space-y-6 pt-2">
             <button
               type="submit"
               disabled={isLoading}
