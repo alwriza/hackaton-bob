@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-type UserRole = 'TEEN' | 'ADULT' | 'PARENT';
+type UserRole = 'USER' | 'PARENT';
 
 export default function RegisterPage() {
   const router = useRouter();
