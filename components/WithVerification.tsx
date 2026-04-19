@@ -16,8 +16,8 @@ export default function WithVerification({ children }: { children: React.ReactNo
       } else if (user.role === 'USER' && !user.is_verified) {
         router.push('/verify');
       } else if (user.role === 'USER' && user.is_minor && !user.parent_id && !user.parent_email) {
-         // Also enforce parent linking if they skipped it
-         router.push('/parent-link');
+        // Only redirect if both parent_id AND parent_email are missing
+        router.push('/parent-link');
       }
     }
   }, [user, isLoading, router]);
