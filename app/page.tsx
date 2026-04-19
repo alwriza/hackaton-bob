@@ -226,8 +226,8 @@ export default function Home() {
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-10">
-              <h2 className="text-4xl md:text-6xl font-black leading-tight tracking-tight italic">
-                Твоя безопасность — наш приоритет.
+              <h2 className="text-4xl md:text-6xl font-black !text-white leading-tight tracking-tight italic">
+                Твоя <span className="!text-secondary">безопасность</span><br className="hidden lg:block" />Наш <span className="!text-accent">приоритет.</span>
               </h2>
 
               <div className="space-y-8">
@@ -245,8 +245,8 @@ export default function Home() {
                       <item.icon size={32} className="text-secondary" />
                     </div>
                     <div className="space-y-2">
-                      <h4 className="text-2xl font-black">{item.title}</h4>
-                      <p className="text-white/60 font-medium leading-relaxed">{item.desc}</p>
+                      <h4 className="text-2xl font-black !text-white">{item.title}</h4>
+                      <p className="!text-white/80 font-medium leading-relaxed">{item.desc}</p>
                     </div>
                   </div>
                 ))}
