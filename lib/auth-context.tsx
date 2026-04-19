@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchProfile = async (userId: string, email: string | undefined) => {
+  const fetchProfile = async (userId: string, email: string | undefined, retryCount = 0) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -26,12 +26,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        // navigator.lock race condition (multiple tabs open) — not a real error, retry silently
-        if (error.message?.includes('Lock') && error.message?.includes('stole it')) {
-          return null;
-        }
-        // PGRST116 = no rows found — profile was never created, auto-create it
+        // PGRST116 = no rows found
         if (error.code === 'PGRST116') {
+          // If we haven't retried yet, wait a bit and try again (give RegisterPage time to insert)
+          if (retryCount < 2) {
+            await new Promise(resolve => setTimeout(resolve, 800));
+            return fetchProfile(userId, email, retryCount + 1);
+          }
+
+          // Still not found after retries? Auto-create as fallback
           const name = email?.split('@')[0] || 'Пользователь';
           const { data: newProfile, error: insertError } = await supabase
             .from('profiles')

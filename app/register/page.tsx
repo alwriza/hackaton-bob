@@ -67,26 +67,16 @@ export default function RegisterPage() {
           completed_jobs: 0,
         };
 
+        // Use UPSERT instead of INSERT to handle the race condition with AuthProvider auto-creation
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert(profileData);
+          .upsert(profileData, { onConflict: 'id' });
 
         if (profileError) {
-          console.warn('Profile insert failed, attempting fallback...', profileError);
-          const fallbackData = {
-            id: authData.user.id,
-            name,
-            role,
-            trust_score: 100,
-            balance: 0,
-            completed_jobs: 0,
-          };
-          const { error: fallbackError } = await supabase.from('profiles').insert(fallbackData);
-          if (fallbackError) {
-            console.error('Fallback failed too:', fallbackError);
-            setError('Аккаунт создан, но возникла ошибка при настройке профиля. Войдите еще раз.');
-            return;
-          }
+          console.error('Profile creation error:', profileError);
+          setError('Ошибка при создании профиля: ' + profileError.message);
+          setIsLoading(false);
+          return;
         }
 
         // Force a session refresh/login just to ensure the client acknowledges it
@@ -102,7 +92,7 @@ export default function RegisterPage() {
         if (role === 'USER') {
           router.push('/verify');
         } else {
-          router.push('/');
+          router.push('/parent'); // Redirect to parent dashboard directly
         }
         router.refresh();
       }
